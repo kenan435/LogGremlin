@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: loggremlin
+  labels:
+    managed-by: argocd
 spec:
   replicas: 1
   selector:
@@ -11,6 +13,7 @@ spec:
     metadata:
       labels:
         app: loggremlin
+        version: gitops
     spec:
       hostNetwork: false
       containers:
