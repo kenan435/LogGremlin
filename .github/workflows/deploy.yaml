@@ -1,4 +1,4 @@
-name: Build and Deploy to Kubernetes
+name: Build and Push Docker Image
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   DOCKER_TAG: otlp-public-ips
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     
     steps:
@@ -36,24 +36,9 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
             ${{ env.DOCKER_IMAGE }}:latest
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
-
-      - name: Update kubeconfig
+            
+      - name: Notify ArgoCD
         run: |
-          aws eks update-kubeconfig --name kenan-lab --region eu-north-1
-
-      - name: Restart deployment
-        run: |
-          kubectl rollout restart deployment/loggremlin -n default
-          kubectl rollout status deployment/loggremlin -n default --timeout=2m
-
-      - name: Verify deployment
-        run: |
-          kubectl get pods -l app=loggremlin -n default
-          kubectl logs -l app=loggremlin -n default --tail=10
+          echo "✅ Docker image built and pushed successfully!"
+          echo "📦 Image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
+          echo "🔄 ArgoCD will automatically sync the deployment"
