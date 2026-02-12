@@ -2,6 +2,8 @@
 
 A multi-format log generator that sends synthetic logs via OpenTelemetry Protocol (OTLP).
 
+[![CI/CD](https://github.com/kenan435/LogGremlin/actions/workflows/deploy.yaml/badge.svg)](https://github.com/kenan435/LogGremlin/actions)
+
 ## Features
 
 - Generates multiple log formats:
