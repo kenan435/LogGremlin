@@ -1,0 +1,46 @@
+{
+  "observedTimeUnixNano": 1770135874223926517,
+  "resource": { "attributes": { "service.name": "VPCFLOW" } },
+  "log": {
+    "version": 2,
+    "account_id": 145556732243,
+    "interface_id": "eni-44090309",
+    "srcaddr": "172.31.251.21",
+    "dstaddr": "126.135.121.224",
+    "srcport": 39657,
+    "dstport": 48974,
+    "protocol": 6,
+    "packets": 622,
+    "bytes": 7664,
+    "start": "2026-02-03T16:24:34Z",
+    "end": "2026-02-03T16:24:34Z",
+    "action": "REJECT",
+    "log_status": "OK"
+  },
+  "timeUnixNano": 1770135874152399345,
+  "scope": { "attributes": {} },
+  "resourceSchemaUrl": "https:\/\/opentelemetry.io\/schemas\/1.37.0",
+  "attributes": {
+    "logtag": "F",
+    "time": "2026-02-03T16:24:34.152399345Z",
+    "log.file.path": "\/var\/log\/pods\/default_loggremlin-7598d7bdb7-mwgp4_2f6348ba-6624-4907-91f9-9efd9325f2bc\/loggremlin\/0.log",
+    "log.iostream": "stdout",
+    "log": {
+      "dstport": 48974.0,
+      "packets": 622.0,
+      "bytes": 7664.0,
+      "start": "2026-02-03T16:24:34Z",
+      "version": 2.0,
+      "srcport": 39657.0,
+      "protocol": 6.0,
+      "end": "2026-02-03T16:24:34Z",
+      "action": "REJECT",
+      "log_status": "OK",
+      "account_id": 145556732243.0,
+      "interface_id": "eni-44090309",
+      "srcaddr": "172.31.251.21",
+      "dstaddr": "126.135.121.224"
+    },
+    "resource": { "attributes": { "service.name": "VPCFLOW" } }
+  }
+}

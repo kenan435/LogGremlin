@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loggremlin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loggremlin
+  template:
+    metadata:
+      labels:
+        app: loggremlin
+    spec:
+      hostNetwork: false
+      containers:
+        - name: loggremlin
+          image: kenan435/loggremlin:otlp-public-ips
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+            - name: OTEL_HOST
+              value: "$(NODE_IP)"
+            - name: OTEL_PORT
+              value: "4317"
