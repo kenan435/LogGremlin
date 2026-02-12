@@ -13,6 +13,8 @@ This project uses **ArgoCD** for continuous deployment to Kubernetes.
 ```
 Developer Push → GitHub → GitHub Actions → Docker Hub
                               ↓
+                    Send Version Tag to Coralogix
+                              ↓
                          ArgoCD watches repo
                               ↓
                     Auto-syncs to Kubernetes
@@ -22,8 +24,29 @@ Developer Push → GitHub → GitHub Actions → Docker Hub
 
 1. **Push code** to `main` branch
 2. **GitHub Actions** builds and pushes Docker image to Docker Hub
-3. **ArgoCD** detects changes in the Git repo
-4. **ArgoCD** automatically syncs the deployment to the cluster
+3. **GitHub Actions** sends version tag to Coralogix for benchmarking
+4. **ArgoCD** detects changes in the Git repo
+5. **ArgoCD** automatically syncs the deployment to the cluster
+
+### 📊 Coralogix Version Benchmarks
+
+Every deployment automatically creates a **Version Benchmark** in Coralogix, allowing you to:
+- Compare error rates before/after deployment
+- Track newly introduced errors
+- Monitor alert volume changes
+- Detect anomalies specific to each version
+
+**Setup Required:**
+1. Get your **Alerts, Rules and Tags API Key** from Coralogix:
+   - Go to **Data Flow** > **API Keys**
+   - Copy your **Alerts, Rules and Tags API Key**
+
+2. Add it as a GitHub secret:
+   ```bash
+   gh secret set CORALOGIX_API_KEY --body "YOUR_API_KEY" --repo kenan435/LogGremlin
+   ```
+
+3. View benchmarks: **Dashboard** > **Version Benchmarks** in Coralogix UI
 
 ### ArgoCD Dashboard
 

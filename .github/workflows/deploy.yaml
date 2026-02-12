@@ -37,8 +37,21 @@ jobs:
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
             ${{ env.DOCKER_IMAGE }}:latest
             
-      - name: Notify ArgoCD
+      - name: Send Version Tag to Coralogix
+        env:
+          CORALOGIX_API_KEY: ${{ secrets.CORALOGIX_API_KEY }}
         run: |
-          echo "✅ Docker image built and pushed successfully!"
-          echo "📦 Image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
-          echo "🔄 ArgoCD will automatically sync the deployment"
+          VERSION="${GITHUB_SHA:0:7}"
+          curl -X POST \
+            https://webapi.eu2.coralogix.com/api/v1/external/tags \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CORALOGIX_API_KEY" \
+            -d '{
+              "name": "LogGremlin v'"$VERSION"'",
+              "application": ["default"],
+              "subsystem": ["ELB", "ALB", "NGINX", "VPCFLOW"],
+              "iconUrl": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+              "timestamp": "'"$(date -u +%s)000"'"
+            }'
+          echo "✅ Version tag sent to Coralogix: v$VERSION"
+          echo "📊 View benchmarks at: https://kenan-karamehmedovic.eu2.coralogix.com/#/dashboard/version-benchmarks"
