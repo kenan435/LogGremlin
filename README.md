@@ -48,6 +48,8 @@ Every deployment automatically creates a **Version Benchmark** in Coralogix, all
 
 3. View benchmarks: **Dashboard** > **Version Benchmarks** in Coralogix UI
 
+**Live URL**: https://kenan-karamehmedovic.eu2.coralogix.com/#/dashboard/version-benchmarks
+
 ### ArgoCD Dashboard
 
 - **URL**: http://a4f1503041a3d4ac1a1edf015973612a-1744544696.eu-north-1.elb.amazonaws.com
