@@ -3,9 +3,6 @@ global:
   clusterName: "kenan-lab"
 
 opentelemetry-agent:
-  presets:
-    spanMetrics:
-      enabled: true
   config:
     exporters:
       coralogix:
@@ -27,16 +24,6 @@ opentelemetry-agent:
     service:
       pipelines:
         logs:
-          exporters:
-            - coralogix
-          processors:
-            - k8sattributes
-            - resourcedetection/env
-            - resourcedetection/region
-            - batch
-          receivers:
-            - otlp
-        traces:
           exporters:
             - coralogix
           processors:

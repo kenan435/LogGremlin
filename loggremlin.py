@@ -7,14 +7,11 @@ import os
 from datetime import datetime
 
 # OpenTelemetry imports
-from opentelemetry import _logs, trace
+from opentelemetry import _logs
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
 # Initialize OpenTelemetry
 OTEL_HOST = os.getenv('OTEL_HOST', 'localhost')
@@ -24,7 +21,6 @@ print(f"Connecting to OTEL at {OTEL_HOST}:{OTEL_PORT}", file=sys.stderr, flush=T
 
 # Create a logger provider (we'll create separate ones for each service.name)
 logger_providers = {}
-tracer_providers = {}
 
 def get_logger_for_service(service_name):
     """Get or create a logger with the appropriate service.name resource attribute"""
@@ -47,31 +43,6 @@ def get_logger_for_service(service_name):
         logger_providers[service_name] = (provider, logger)
     
     return logger_providers[service_name][1]
-
-def get_tracer_for_service(service_name):
-    """Get or create a tracer with the appropriate service.name resource attribute"""
-    if service_name not in tracer_providers:
-        # Create resource with service.name
-        resource = Resource.create({"service.name": service_name})
-        
-        # Create tracer provider with this resource
-        provider = TracerProvider(resource=resource)
-        
-        # Add OTLP span exporter with shorter batch timeout
-        span_exporter = OTLPSpanExporter(
-            endpoint=f"{OTEL_HOST}:{OTEL_PORT}",
-            insecure=True
-        )
-        # Use shorter schedule_delay for faster export (default is 5s)
-        provider.add_span_processor(BatchSpanProcessor(span_exporter, schedule_delay_millis=1000))
-        
-        # Get tracer from this provider
-        tracer = provider.get_tracer(__name__)
-        tracer_providers[service_name] = (provider, tracer)
-        
-        print(f"DEBUG: Created tracer provider for {service_name}", file=sys.stderr, flush=True)
-    
-    return tracer_providers[service_name][1]
 
 
 def generate_ip():
@@ -538,47 +509,25 @@ def generate_logs_continuously(num_logs, sleep_interval, clear_interval):
                     print(f"DEBUG: Before generate_structured_log()", file=sys.stderr, flush=True)
                     service_name, log_body = generate_structured_log()
                     print(f"DEBUG: After generate, service={service_name}", file=sys.stderr, flush=True)
-                    
-                    # Get logger and tracer for this service
                     logger = get_logger_for_service(service_name)
-                    tracer = get_tracer_for_service(service_name)
-                    print(f"DEBUG: Got logger and tracer", file=sys.stderr, flush=True)
-                    
+                    print(f"DEBUG: Got logger", file=sys.stderr, flush=True)
                     # Parse JSON to get attributes
                     log_attrs = json.loads(log_body)
-                    
-                    # Create a span for this request
-                    with tracer.start_as_current_span(
-                        name=f"{service_name}.request",
-                        attributes={
-                            "http.method": log_attrs.get("request_method", "GET"),
-                            "http.status_code": log_attrs.get("elb_status_code") or log_attrs.get("backend_status_code") or log_attrs.get("status", 200),
-                            "http.url": log_attrs.get("request_uri", "/"),
-                        }
-                    ) as span:
-                        # Emit log with trace context
-                        logger.emit(
-                            body=json.dumps(log_attrs),
-                            attributes=log_attrs,
-                            severity_number=_logs.SeverityNumber.INFO
-                        )
-                    print(f"DEBUG: Emitted structured log and span for {service_name}", file=sys.stderr, flush=True)
+                    logger.emit(
+                        body=json.dumps(log_attrs),
+                        attributes=log_attrs,
+                        severity_number=_logs.SeverityNumber.INFO
+                    )
+                    print(f"DEBUG: Emitted structured log for {service_name}", file=sys.stderr, flush=True)
                     
                 elif log_type == 'unstructured':
                     service_name, log_message = generate_unstructured_log()
                     logger = get_logger_for_service(service_name)
-                    tracer = get_tracer_for_service(service_name)
-                    
-                    # Create a span
-                    with tracer.start_as_current_span(
-                        name=f"{service_name}.operation",
-                        attributes={"log.type": "unstructured"}
-                    ):
-                        logger.emit(
-                            body=log_message,
-                            severity_number=_logs.SeverityNumber.INFO
-                        )
-                    print(f"DEBUG: Emitted unstructured log and span for {service_name}", file=sys.stderr, flush=True)
+                    logger.emit(
+                        body=log_message,
+                        severity_number=_logs.SeverityNumber.INFO
+                    )
+                    print(f"DEBUG: Emitted unstructured log for {service_name}", file=sys.stderr, flush=True)
                     
                 elif log_type == 'multiline':
                     service_name = 'multiline'
@@ -604,9 +553,6 @@ def generate_logs_continuously(num_logs, sleep_interval, clear_interval):
                 log_count += 1
                 if log_count % 10 == 0:
                     print(f"Emitted {log_count} logs so far...", file=sys.stderr, flush=True)
-                    # Flush all tracer providers to ensure spans are sent
-                    for service_name, (provider, _) in tracer_providers.items():
-                        provider.force_flush()
                     break  # Exit inner loop to see debug output faster
                     
             except Exception as e:
