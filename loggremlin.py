@@ -57,16 +57,19 @@ def get_tracer_for_service(service_name):
         # Create tracer provider with this resource
         provider = TracerProvider(resource=resource)
         
-        # Add OTLP span exporter
+        # Add OTLP span exporter with shorter batch timeout
         span_exporter = OTLPSpanExporter(
             endpoint=f"{OTEL_HOST}:{OTEL_PORT}",
             insecure=True
         )
-        provider.add_span_processor(BatchSpanProcessor(span_exporter))
+        # Use shorter schedule_delay for faster export (default is 5s)
+        provider.add_span_processor(BatchSpanProcessor(span_exporter, schedule_delay_millis=1000))
         
         # Get tracer from this provider
         tracer = provider.get_tracer(__name__)
         tracer_providers[service_name] = (provider, tracer)
+        
+        print(f"DEBUG: Created tracer provider for {service_name}", file=sys.stderr, flush=True)
     
     return tracer_providers[service_name][1]
 
@@ -601,6 +604,9 @@ def generate_logs_continuously(num_logs, sleep_interval, clear_interval):
                 log_count += 1
                 if log_count % 10 == 0:
                     print(f"Emitted {log_count} logs so far...", file=sys.stderr, flush=True)
+                    # Flush all tracer providers to ensure spans are sent
+                    for service_name, (provider, _) in tracer_providers.items():
+                        provider.force_flush()
                     break  # Exit inner loop to see debug output faster
                     
             except Exception as e:
