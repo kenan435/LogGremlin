@@ -87,6 +87,7 @@ The deployment is fully automated via GitOps. Any changes to `k8s/` manifests wi
 - ✅ **Self-Healing**: ArgoCD reverts manual cluster changes
 - ✅ **Prune**: Removes resources deleted from Git
 - ✅ **Retry Logic**: Auto-retries failed syncs
+- ✅ **Trace Generation**: Generates OpenTelemetry spans for APM visibility
 
 ## Features
 
