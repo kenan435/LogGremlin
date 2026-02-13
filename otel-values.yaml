@@ -3,6 +3,9 @@ global:
   clusterName: "kenan-lab"
 
 opentelemetry-agent:
+  presets:
+    spanMetrics:
+      enabled: true
   config:
     exporters:
       coralogix:
